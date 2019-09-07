@@ -27,20 +27,24 @@ class CalenderView extends React.Component{
         this.props.listEvents();
     }
 
+    dateRangeOverlaps = (firstDateRange, secondDateRange) => {
+        if (firstDateRange.start_date <= secondDateRange.start_date && secondDateRange.start_date <= firstDateRange.end_date) return true; // b starts in a
+        if (firstDateRange.start_date <= secondDateRange.end_date  && secondDateRange.end_date <= firstDateRange.end_date) return true; // b ends in a
+        if (secondDateRange.start_date < firstDateRange.start_date && firstDateRange.end_date < secondDateRange.end_date) return true;
+        if (moment(firstDateRange.start_date).format("YYYY-MM-DD") === moment(secondDateRange.start_date).format("YYYY-MM-DD")) return true;
+        return false;
+    }
+
     UNSAFE_componentWillReceiveProps (nextProps) {
         if (nextProps.events !== this.state.events) {
-            let events = []
-            events = nextProps.events.map((event) => {
-                let duplicate = _.filter(nextProps.events, (value) => {
-                    if(moment(event.start_date).format("YYYY-MM-DD") === moment(value.start_date).format("YYYY-MM-DD")) {
-                        return value;
+            let events = nextProps.events.map((event) => {
+                let duplicate = _.filter(nextProps.events, (item) => {
+                    if(this.dateRangeOverlaps(event, item)) {
+                        return item;
                     }
                 });
                 if(duplicate.length > 1) {
-                    return ({
-                        ...event,
-                        color: '#ad3131'
-                    });
+                    return ({...event, color: '#ad3131'});
                 }
                 else {
                     return event;
@@ -61,7 +65,6 @@ class CalenderView extends React.Component{
     };
 
     eventStyleGetter = (event) => {
-        console.log(event);
         if(event.color) {
             return{
                 style: {
@@ -78,7 +81,6 @@ class CalenderView extends React.Component{
 
     render() {
         const {loading, events} = this.state;
-        debugger;
         return(
             <div>
                 <div>
@@ -124,7 +126,6 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => {
-    debugger;
     return {
         // dispatching plain actions
         listEvents: (startDate, endDate) => dispatch(loadEvents(startDate, endDate)),
